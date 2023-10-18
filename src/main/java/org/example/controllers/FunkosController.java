@@ -1,15 +1,20 @@
 package org.example.controllers;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.example.database.DataBaseManager;
 import org.example.models.Funkos;
 import org.example.models.Modelo;
 import org.example.repository.funkos.FunkoRepositoryImpl;
+import org.example.serializers.LocalDateDeserializer;
 import org.example.services.Service;
 
 import java.io.*;
 import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +31,7 @@ public class FunkosController {
         var funkosRepoImpl = FunkoRepositoryImpl.getInstance(dbm);
         listaFunkos = funkosRepoImpl.findAll();
         procesarStreams();
+        backup();
     }
 
     public static FunkosController getInstance() throws SQLException {
@@ -85,7 +91,18 @@ public class FunkosController {
         listaStitch.forEach(System.out::println);
     }
 
-    public void EscribirJSON() {
+    public void backup() {
+        var datosJSON = listaFunkos;
+        String file = Paths.get("").toAbsolutePath() + File.separator + "data" + File.separator + "funkos.json";
 
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(LocalDate.class, new LocalDateDeserializer());
+        Gson gson = gsonBuilder.setPrettyPrinting().create();
+        try (FileWriter writer = new FileWriter(file)) {
+            gson.toJson(datosJSON, writer);
+            System.out.println("Datos exportados con éxito a " + file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
