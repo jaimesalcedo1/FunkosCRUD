@@ -155,6 +155,25 @@ public class FunkoRepositoryImpl implements FunkoRepository{
 
     @Override
     public List<Funkos> findByNombre(String nombre) throws SQLException {
-        return null;
+        logger.debug("Datos del funko: " + nombre);
+        String query = "SELECT * FROM FUNKOS WHERE nombre LIKE ?";
+        try(var connection = dbm.getConnection();
+            var pstm = connection.prepareStatement(query))
+        {
+            pstm.setString(1, "%" + nombre + "%");
+            var rs = pstm.executeQuery();
+            var lista = new ArrayList<Funkos>();
+            while(rs.next()){
+                Funkos funko = Funkos.builder()
+                        .COD(UUID.fromString(rs.getString("cod")))
+                        .NOMBRE(rs.getString("nombre"))
+                        .MODELO(Modelo.valueOf(rs.getString("modelo")))
+                        .PRECIO(rs.getDouble("precio"))
+                        .FECHA_LANZAMIENTO(LocalDate.parse(rs.getString("fecha_lanzamiento")))
+                        .build();
+                lista.add(funko);
+            }
+            return lista;
+        }
     }
 }
